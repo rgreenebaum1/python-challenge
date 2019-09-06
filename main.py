@@ -1,88 +1,81 @@
 import os
 import csv
 
-for file_count in range(2):
-    file_name = "budget_data_" + str(file_count + 1) + ".csv"
+# for file_count in range(2):
+#     file_name = "election_data_" + str(file_count + 1) + ".csv"
 
-budget_data = "budget_data.csv"
+# from collections import Counter
 
-total_months = 0
-prev_revenue = 0
-month_of_change = []
-revenue_change_list = []
-greatest_increase = ["", 0]
-greatest_decrease = [", 999999999999999999"]
-total_revenue = 0
-net_change = []
-prev_net = []
-value = 0
-dates = []
-profits = []
-change = 0
-greatest_index = 0
-greatest_date = 0
-revenue_avg = 0
+csvpath = os.path.join("election_data.csv")
+file_to_output = os.path.join("election_data.txt")
 
-with open(budget_data) as csvfile:
-    csvreader = csv.reader(csvfile, delimiter=",")
+# Candidates = []
 
-    next(csvreader)
+total_votes = 0
 
-    first_row = next(csvreader)
-    total_months += 1
-    total_revenue += int(first_row[1])
-    value = int(first_row[1])
+candidate_options = []
+candidate_votes = {}
+
+
+winner_votes = 0
+Candidate = {}
+
+winning_candidate = ""
+winning_count = 0
+
+
+with open(csvpath, newline="") as csvfile:
+    csvreader = csv.DictReader(csvfile, delimiter=",")
 
     for row in csvreader:
 
-        # To keep track of the dates
-        dates.append(row[0])
+        total_votes = total_votes + 1
 
-        # calculate the change, then add it to list of changes
-        change = int(row[1]) - value
-        profits.append(change)
-        value = int(row[1])
+        candidate_name = row["Candidate"]
 
-        # The total number of months included in the dataset
-        total_months = total_months + 1
+        if candidate_name not in candidate_options:
 
-        # The net total amount of "Profit/Losses" over the entire period
+            candidate_options.append(candidate_name)
 
-        total_revenue = total_revenue + int(row[1])
+            candidate_votes[candidate_name] = 0
 
-        # The average of the changes in "Profit/Losses" over the entire period
-    revenue_avg = round(sum(profits) / len(profits), 2)
+            candidate_votes[candidate_name] = candidate_votes[candidate_name] + 1
 
-    # The greatest increase in profits (date and amount) over the entire period
-    greatest_increase = max(profits)
-    greatest_index = profits.index(greatest_increase)
-    greatest_date = dates[greatest_index]
+        candidate_votes[candidate_name] = candidate_votes[candidate_name] + 1
 
-    # The greatest decrease in losses (date and amount) over the entire period
-    greatest_decrease = min(profits)
-    worst_index = profits.index(greatest_decrease)
-    worst_date = dates[worst_index]
+with open(file_to_output, "w") as txt_file:
 
+    election_results = (
+        f"\n\nElection Results\n"
+        f"------------------------------------------\n"
+        f"Total Votes: {total_votes}\n"
+        f"------------------------------------------\n"
+    )
+    print(election_results, end="")
 
-print("Financial Analysis")
-print("-------------------")
-print(f"Total Months: {str(total_months)}")
-print(f"Revenue: ${total_revenue}")
-print(f"Average Change: ${revenue_avg}")
-print(f"Greatest Increase in Profits: {greatest_date} (${greatest_increase})")
-print(f"Greatest Decrease in Profits: {worst_date} (${greatest_decrease})")
+    txt_file.write(election_results)
 
+    Candidates = list(candidate_votes.keys())
+    for c in Candidates:
+        votes = candidate_votes[c]
+        vote_percentage = float(votes / total_votes) * 100
 
-write_file = f"pybank_results_summary_{file_count+1}.txt"
+        if votes > winning_count:
+            winning_count = votes
+            winning_candidate = c
 
-filewriter = open(write_file, mode="w")
-filewriter.write(f"Financial Analysis for {file_name}:\n")
-filewriter.write("-------------------------------------------------------\n")
-filewriter.write(f"Total Months: {total_months}\n")
-filewriter.write(f"Total Revenue: {total_revenue}\n")
-filewriter.write(f"Average Revenue Change: {revenue_avg}\n")
-filewriter.write(f"Greatest Increase in Revenue: {greatest_date} {greatest_increase}\n")
-filewriter.write(f"Greatest Decrease in Revenue: {worst_date} {greatest_decrease}\n")
-filewriter.write("")
+        voter_output = f"{c}: {vote_percentage:.3f}% ({candidate_votes[c]})\n"
+        print(voter_output)
 
-filewriter.close()
+    # txt_file.write(voter_output)
+
+winning_summary = (
+    f"------------------------------------------\n"
+    f"Winner: {winning_candidate}\n"
+    f"------------------------------------------"
+)
+
+print(winning_summary)
+
+txt_file.write(winning_summary)
+
